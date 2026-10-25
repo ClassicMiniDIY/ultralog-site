@@ -1,9 +1,11 @@
 # ultralog.co: Route 53 → Cloudflare, and API access for Claude
 
-> **Status (2026-10-25):** Part 1 done. Batches A, B and C done: ultralog.co and www are Worker
-> custom domains, www 301s to the apex, SSL Full (strict), Always Use HTTPS, TLS 1.2+. The
-> pre-cutover records are backed up in `../ultralog-site-dns-backup-2026-10-25.json` (outside the
-> repo). Next: batch D (retire GitHub Pages), then E.
+> **Status (2026-10-25):** Part 1 done. Batches A-D done: ultralog.co and www are Worker custom
+> domains, www 301s to the apex, SSL Full (strict), Always Use HTTPS, TLS 1.2+. The Route 53
+> hosted zone is deleted (its servers now answer REFUSED, so stale resolvers fall back to the
+> Cloudflare delegation) and GitHub Pages is off. Backups outside the repo:
+> `../ultralog-site-dns-backup-2026-10-25.json` (Cloudflare import) and
+> `../ultralog-site-route53-backup-2026-10-25.json` (Route 53 zone). Left: delete the setup token.
 
 Part 1 is yours (registrar and account steps). Part 2 is what Claude does over the Cloudflare
 API and `gh`, one approved batch at a time. The site keeps serving from GitHub Pages until the
