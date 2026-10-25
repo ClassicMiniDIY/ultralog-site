@@ -55,7 +55,13 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   so the sync must run before nuxt. Wiki links are rewritten to `/docs/<page>` only when that page
   exists (`docsHref`); anything else resolves on github.com, so the crawler never sees a dead link.
   Nuxt Content is deliberately not used (design doc, Stack).
-- **Screenshots** are committed WebP files in `public/screenshots/<name>-{760,1520}.webp`,
+- **Docs search** (`docs/plans/2026-10-25-docs-search.md`): `/api/search-index.json` is built by
+  splitting `renderWikiPage().html` at `<h2|h3 id="...">`, so it depends on the heading markup
+  `server/utils/markdown.ts` writes; change one, check the other (`test/search.test.ts` covers the
+  anchors). The browser fetches the index on first focus only. Snippets render as text segments,
+  never `v-html`. `fold()` works one code point at a time so `search` and `snippet` agree.
+- **Screenshots** come from the app's Night Drive theme (intensity 35) at a 1728×1020 pt window,
+  saved as 1600×944 PNGs. They are committed WebP files in `public/screenshots/<name>-{760,1520}.webp`,
   generated from `source/screenshots/*.png`. `@nuxt/image` was dropped: its static output only
   covered the visible tab and named WebP files `.png`, which Cloudflare serves as `image/png`.
 - **Mode band** renders every tab panel (inactive ones `hidden`) so no panel needs a fetch.

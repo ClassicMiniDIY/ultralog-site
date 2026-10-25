@@ -12,6 +12,7 @@ const currentTitle = computed(() => props.nav.flatMap((g) => g.items).find((i) =
 <template>
   <div class="ul-wrap ul-docs">
     <nav class="ul-docs__nav" aria-label="Docs">
+      <DocsSearch />
       <details class="ul-docs__fold">
         <summary class="ul-btn ul-btn--block">
           <UlIcon name="book" />{{ currentTitle ?? 'All docs' }}
