@@ -1,0 +1,59 @@
+@import "tailwindcss";
+/* The Night Drive tokens, unchanged from the design handoff. Every colour on the site comes from here. */
+@import "../../../design/tokens/tokens.css";
+@import "./components.css";
+
+/* Tailwind's own palette, fonts, radii and shadows are removed so only token-backed utilities exist. */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+}
+
+@theme inline {
+  --color-void: var(--bg-void);
+  --color-base: var(--bg-base);
+  --color-panel: var(--bg-panel);
+  --color-raised: var(--bg-raised);
+  --color-field: var(--bg-field);
+  --color-hover: var(--bg-hover);
+  --color-active: var(--bg-active);
+  --color-line-subtle: var(--line-subtle);
+  --color-line: var(--line);
+  --color-line-control: var(--line-control);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-disabled: var(--ink-disabled);
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-on-cyan: var(--on-cyan);
+  --color-magenta: var(--magenta);
+  --color-magenta-soft: var(--magenta-soft);
+  --color-violet: var(--violet);
+  --color-orange: var(--orange);
+  --color-gold: var(--gold);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Token names collide with Tailwind's namespaces (--font-mono, --radius-lg), so the utilities get their own names. */
+  --font-brand: var(--font-display);
+  --font-body: var(--font-ui);
+  --font-data: var(--font-mono);
+  --radius-chip: var(--radius-xs);
+  --radius-field: var(--radius-sm);
+  --radius-control: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-round: var(--radius-pill);
+}

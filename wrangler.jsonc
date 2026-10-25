@@ -1,0 +1,14 @@
+{
+  // Static-assets-only Worker: `nuxt generate` writes every page to .output/public and there is
+  // no server code at runtime. Bump wrangler (package.json) first, compatibility_date second.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ultralog-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": ".output/public",
+    // /download serves 200; /download/ redirects to it (same as OpenECUAlliance).
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": { "enabled": true }
+}
