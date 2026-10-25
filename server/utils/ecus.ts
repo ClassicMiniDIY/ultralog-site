@@ -1,43 +1,17 @@
 import type { EcuChannel } from '#shared/types/site'
-import { createMarkdown } from './markdown'
+import { readWikiFile, rewriteWikiLinks, wikiMarkdown } from './wiki'
 
-const WIKI_RAW = 'https://raw.githubusercontent.com/wiki/ClassicMiniDIY/UltraLog/Supported-ECU-Formats.md'
-const WIKI_BASE = 'https://github.com/ClassicMiniDIY/UltraLog/wiki'
 const OECUA_API = 'https://oecua.org/api/adapters'
 const OECUA_SITE = 'https://oecua.org/adapters'
 
-// The wiki section's `###` headings sit under the page's h1, so they become h2. Relative links
-// (`User-Guide#computed-channels`) resolve against the wiki, as they do on GitHub.
-const wikiMarkdown = createMarkdown({ baseUrl: `${WIKI_BASE}/`, headingShift: -1 })
-
 /**
- * A data source did not give what a page expects. In CI a moved wiki heading fails the build
- * (it would otherwise deploy blank ECU pages unnoticed); network failures only annotate the run,
- * so an outage of oecua.org or raw.githubusercontent.com does not block a release deploy.
+ * A data source did not give what a page expects. In CI a missing wiki section fails the build
+ * (it would otherwise deploy blank ECU pages unnoticed); an OECUA fetch failure only annotates the
+ * run, so an outage of oecua.org does not block a release deploy.
  */
 function reportMiss(message: string, { failInCi }: { failInCi: boolean }) {
   if (process.env.CI && failInCi) throw new Error(`[ecus] ${message}`)
   console.warn(process.env.GITHUB_ACTIONS ? `::warning title=ECU data::${message}` : `[ecus] ${message}`)
-}
-
-let wikiPage: Promise<string | null> | null = null
-
-function fetchWikiPage(): Promise<string | null> {
-  wikiPage ??= $fetch<string>(WIKI_RAW, { responseType: 'text' }).catch((err: unknown) => {
-    // The ECU pages still build without the wiki copy; they show the summary and link to the wiki.
-    reportMiss(`wiki fetch failed: ${String(err)}`, { failInCi: false })
-    return null
-  })
-  return wikiPage
-}
-
-/** `[[Page]]` and `[[Text|Page]]` are GitHub wiki links; turn them into normal Markdown links. */
-function rewriteWikiLinks(md: string): string {
-  return md.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, a: string, b?: string) => {
-    const text = b ? a : a.replace(/-/g, ' ')
-    const page = (b ?? a).trim().replace(/\s+/g, '-')
-    return `[${text}](${WIKI_BASE}/${page})`
-  })
 }
 
 /**
@@ -49,12 +23,17 @@ export function headingMatches(line: string, heading: string): boolean {
   return new RegExp(`^## ${esc}(?:\\s*$| - | / )`).test(line)
 }
 
-/** The wiki section whose `## ` heading names `heading`, rendered without its heading. */
-export async function getWikiSection(heading: string): Promise<string | null> {
-  const page = await fetchWikiPage()
-  if (!page) return null
-  const sections = page.replace(/\r\n/g, '\n').split(/\n(?=## )/)
-  const section = sections.find((s) => headingMatches(s.split('\n', 1)[0] ?? '', heading))
+/**
+ * The Supported-ECU-Formats wiki section headed `heading`, rendered without its heading. Its
+ * `###` headings sit under the ECU page's h1, so they become h2; wiki links go to /docs pages.
+ */
+export function getWikiSection(heading: string): string | null {
+  const page = readWikiFile('Supported-ECU-Formats')
+  if (page === null) {
+    reportMiss('the wiki has no Supported-ECU-Formats page (is .wiki synced?)', { failInCi: true })
+    return null
+  }
+  const section = page.split(/\n(?=## )/).find((s) => headingMatches(s.split('\n', 1)[0] ?? '', heading))
   if (!section) {
     reportMiss(`no Supported-ECU-Formats wiki section is headed "## ${heading}"`, { failInCi: true })
     return null
@@ -63,7 +42,7 @@ export async function getWikiSection(heading: string): Promise<string | null> {
     .replace(/^## .*\n/, '')
     .replace(/\n---\s*$/, '')
     .trim()
-  return wikiMarkdown.parse(rewriteWikiLinks(body)) as string
+  return wikiMarkdown({ headingShift: -1 }).parse(rewriteWikiLinks(body)) as string
 }
 
 interface OecuaChannel {

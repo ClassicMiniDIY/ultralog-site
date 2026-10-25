@@ -3,7 +3,7 @@
 ultralog.co: the website for UltraLog (ClassicMiniDIY/UltraLog), the Rust/egui ECU log viewer.
 Nuxt 4 + Vue 3 `<script setup>` + TypeScript strict, Bun, Tailwind CSS 4 via `@tailwindcss/vite`,
 fully prerendered (`nuxt generate`) and served as a static-assets-only Cloudflare Worker.
-Design doc and open decisions: `docs/plans/2026-10-24-ultralog-site.md`.
+Design doc: `docs/plans/2026-10-24-ultralog-site.md`. Deployment runbook: `docs/cloudflare-setup.md`.
 
 ```bash
 bun install
@@ -11,6 +11,8 @@ bun run dev          # http://localhost:3000
 bun run generate     # .output/public; set GITHUB_TOKEN to avoid the 60/h API limit
 bun run typecheck
 bun run screenshots  # after changing source/screenshots/*.png
+bun run test         # Vitest
+bun run sync:wiki    # refresh .wiki/ (dev and generate do this too)
 ```
 
 ## Design system
@@ -47,6 +49,12 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   (optionally followed by ` - …` or ` / …`; `shared/utils/ecus.ts`). Renaming a heading in the wiki
   fails the CI build; a wiki or OECUA fetch failure only adds a `::warning::` so an outage does not
   block a release deploy. Channel tables come from the OpenECU Alliance adapter in `oecua`.
+- **Docs are the GitHub wiki**, cloned into `.wiki/` by `scripts/sync-wiki.ts` (the `dev`,
+  `generate` and `build` scripts run it first; `WIKI_DIR=../UltraLog.wiki` previews a local
+  checkout, including unpushed edits). `nuxt.config.ts` reads the clone for the prerender list,
+  so the sync must run before nuxt. Wiki links are rewritten to `/docs/<page>` only when that page
+  exists (`docsHref`); anything else resolves on github.com, so the crawler never sees a dead link.
+  Nuxt Content is deliberately not used (design doc, Stack).
 - **Screenshots** are committed WebP files in `public/screenshots/<name>-{760,1520}.webp`,
   generated from `source/screenshots/*.png`. `@nuxt/image` was dropped: its static output only
   covered the visible tab and named WebP files `.png`, which Cloudflare serves as `image/png`.

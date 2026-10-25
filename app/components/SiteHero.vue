@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // One hero per page: eyebrow, display headline (one word in magenta via <em>), lede, CTA slot.
 // The striped sun and the perspective floor are drawn from tokens so they follow the theme.
-withDefaults(defineProps<{ eyebrow: string; lede?: string; variant?: 'home' | 'page' }>(), {
+withDefaults(defineProps<{ eyebrow: string; lede?: string; variant?: 'home' | 'page' | 'docs' }>(), {
   lede: '',
   variant: 'home',
 })
@@ -12,7 +12,7 @@ const rows = [0, 14, 34, 62, 100]
 </script>
 
 <template>
-  <section class="ul-hero" :class="{ 'ul-hero--page': variant === 'page' }">
+  <section class="ul-hero" :class="{ 'ul-hero--page': variant !== 'home', 'ul-hero--docs': variant === 'docs' }">
     <svg class="ul-hero__floor" viewBox="0 0 960 120" preserveAspectRatio="none" aria-hidden="true">
       <line v-for="r in rays" :key="`r${r.x1}`" :x1="r.x1" y1="0" :x2="r.x2" y2="120" />
       <line v-for="y in rows" :key="`h${y}`" x1="0" :y1="y" x2="960" :y2="y" />

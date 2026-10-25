@@ -1,6 +1,7 @@
 # ultralog.co on Nuxt + Cloudflare
 
-Status: built and verified locally (2026-10-24). Not deployed, no remote. Open decisions at the end.
+Status: built and verified locally (2026-10-24). Not deployed, no remote. Decisions settled 2026-10-24
+(end of this doc); the deployment runbook is `docs/cloudflare-setup.md`.
 
 Source brief: `design/HANDOFF-WEBSITE.md` and `design/design-system/5-website.md` (copied from the
 UltraLog design handoff). This doc records how the brief is implemented and what is still open.
@@ -41,7 +42,22 @@ ultralog-site/
   variable (`--color-cyan: var(--cyan)`), and the default Tailwind palette is cleared
   (`--color-*: initial`), so a raw colour utility does not exist. Component CSS from the handoff
   (`ul-*` classes) is ported as-is; it already reads only tokens.
-- **No Nuxt Content** yet. `/docs` links to the GitHub wiki (see decision 4).
+- **Docs from the GitHub wiki, without Nuxt Content.** `scripts/sync-wiki.ts` clones
+  `UltraLog.wiki` into `.wiki/` before `dev`/`generate`, and `server/utils/wiki.ts` renders each
+  page through the same `createMarkdown` as the release notes. Nuxt Content was considered and
+  not used:
+  - It cannot read the wiki directly: its remote `repository` source downloads a GitHub tarball,
+    and wikis have none. A clone step is needed either way.
+  - It renders raw HTML in Markdown (MDC), which would bypass the sanitizer that the review
+    tested (`test/markdown.test.ts`). The wiki is collaborator-edited content, like the release
+    bodies.
+  - It adds SQLite at build and a WASM SQLite client for in-browser queries; 14 prerendered pages
+    need neither.
+  What the own pipeline adds for docs: GitHub-style heading ids with an "On this page" list,
+  `[[Page]]` / `Page#anchor` / full wiki URLs mapped to `/docs/<page>` (only for pages that exist,
+  so the crawler never 404s), https images, the `_Sidebar` as the docs navigation, and an
+  "Edit this page" link to the wiki editor. Search is not built yet (a static index over the
+  prerendered JSON would do it).
 - **Screenshots** are WebP files at 760 and 1520 px, made by `scripts/screenshots.ts` (sharp) and
   committed. `@nuxt/image` was tried and dropped: in static output it only generated images for
   the visible tab, and it names WebP files `.png`, which Cloudflare would serve as `image/png`.
@@ -124,8 +140,9 @@ ultralog-site/
 - `/download` DownloadCards for the latest stable release, a table of every asset with size and
   SHA-256, and the last ten stable versions with links.
 - `/releases` every release as a ReleaseCard with the rendered notes.
-- `/docs` wiki links (Getting started, User guide, Supported formats, Computed channels, MCP) and
-  the issue / discussion links.
+- `/docs` the wiki Home page and the `_Sidebar` navigation; `/docs/<page>` every wiki page
+  (`Getting-Started` → `/docs/getting-started`). The ECU pages render their Supported-ECU-Formats
+  section from the same clone.
 - `/ecus` and `/ecus/[slug]` one page per supported format: maker, file types, how to export,
   parser notes, a link to the sample log in `exampleLogs/`, and, where an OpenECU Alliance adapter
   exists, the channel table built from it at build time (source names → normalized name, unit).
@@ -184,15 +201,15 @@ jobs:
         run: gh api repos/ClassicMiniDIY/ultralog-site/dispatches -f event_type=app-release
 ```
 
-## Decisions that need Cole
+## Decisions (settled with Cole, 2026-10-24)
 
-1. **GitHub repo name and org.** Proposed: `ClassicMiniDIY/ultralog-site`, public.
-2. **Cloudflare account and Worker name.** Proposed: the ClassicMiniDIY account that already hosts
-   `open-ecu-alliance.classicminidiy.workers.dev`, Worker `ultralog-site`.
-3. **DNS move of ultralog.co.** Add the zone to Cloudflare (or move it), attach the custom domain to
-   the Worker, then delete `docs/CNAME` and turn off GitHub Pages in the UltraLog repo.
-4. **Wiki import.** Keep `/docs` as links to the GitHub wiki (current build), or import
-   `UltraLog.wiki` into Nuxt Content at build (adds a second repo checkout to CI and a
-   wiki-link rewrite pass).
-5. **App-repo hook.** Approve adding the dispatch step to `release.yml` and the `release: edited`
-   workflow, and creating the `SITE_DISPATCH_TOKEN` PAT.
+1. **GitHub repo:** `ClassicMiniDIY/ultralog-site`, public.
+2. **Cloudflare:** the ClassicMiniDIY account (hosts `open-ecu-alliance`), Worker `ultralog-site`.
+3. **DNS:** Cole moves ultralog.co from Route 53 to Cloudflare. Claude then sets up the Worker,
+   custom domains, redirect and zone settings over the Cloudflare API, and retires GitHub Pages
+   by PR. Steps, tokens and rollback: `docs/cloudflare-setup.md`.
+4. **Docs:** imported from the wiki at build (above). Not Nuxt Content.
+5. **App-repo hook:** approved as proposed (dispatch step in `release.yml`, `release: edited`
+   workflow, `SITE_DISPATCH_TOKEN` fine-grained PAT). Lands in the batch D PR.
+
+Each outward-facing batch (A to E in `docs/cloudflare-setup.md`) still gets its own yes.

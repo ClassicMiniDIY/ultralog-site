@@ -30,6 +30,24 @@ export interface Release {
   assets: ReleaseAsset[]
 }
 
+export interface DocPage {
+  /** Site slug; empty for the wiki Home page, which is /docs. */
+  slug: string
+  /** Wiki page name (`Getting-Started`). */
+  name: string
+  title: string
+  html: string
+  /** The page's h2 sections, for "On this page". */
+  toc: { id: string; text: string }[]
+  editUrl: string
+  sourceUrl: string
+}
+
+export interface DocNavGroup {
+  title: string
+  items: { path: string; title: string }[]
+}
+
 export interface EcuChannel {
   name: string
   unit: string | null

@@ -1,8 +1,11 @@
 import tailwindcss from '@tailwindcss/vite'
 import { ECUS } from './shared/utils/ecus'
 import { colors } from './design/tokens/tokens'
+import { docsPath, listWikiFiles } from './server/utils/wiki'
 
 const SITE_URL = 'https://ultralog.co'
+// scripts/sync-wiki.ts runs before nuxt, so the wiki is on disk when this file loads.
+const WIKI = listWikiFiles()
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
@@ -58,6 +61,9 @@ export default defineNuxtConfig({
         '/robots.txt',
         ...ECUS.map((e) => `/ecus/${e.slug}`),
         ...ECUS.map((e) => `/api/ecus/${e.slug}.json`),
+        '/api/docs-nav.json',
+        ...WIKI.map((f) => docsPath(f)),
+        ...WIKI.map((f) => `/api/docs/${f.slug || 'index'}.json`),
       ],
       failOnError: true,
     },
