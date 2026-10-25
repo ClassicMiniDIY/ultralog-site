@@ -52,9 +52,9 @@ export const MODES: Mode[] = [
     body: 'Plot any two channels against each other to see how they move together, colored by a third.',
     image: {
       name: 'scatter',
-      alt: 'Two UltraLog scatter plots: RPM against MAP, and oil pressure against oil temperature, colored by hit count.',
+      alt: 'Two UltraLog scatter plots in Night Drive from a Haltech log: MAP against RPM, and ignition timing against MAP, colored by hit count.',
       width: 760,
-      height: 464,
+      height: 448,
     },
   },
   {
@@ -63,9 +63,9 @@ export const MODES: Mode[] = [
     body: 'Average any channel over RPM × MAP, or count hits per cell. Copy the grid straight into your tune.',
     image: {
       name: 'histogram',
-      alt: 'UltraLog Histogram: oil pressure averaged over a 32 by 32 grid of MAP and RPM cells.',
+      alt: 'UltraLog Histogram in Night Drive: ignition timing averaged over a 32 by 32 grid of RPM and MAP cells from a Haltech log.',
       width: 760,
-      height: 464,
+      height: 448,
     },
   },
   {
@@ -83,6 +83,12 @@ export const MODES: Mode[] = [
     id: 'accel-enrich',
     name: 'Accel Enrichment',
     body: 'Detects tip-ins, shifts the lambda window by the measured delay, and suggests a starting correction per RPM and throttle-rate cell.',
+    image: {
+      name: 'accel-enrich',
+      alt: 'UltraLog Accel Enrichment table from a Haltech log: suggested correction in percent per RPM and throttle-rate cell, with confidence badges, the rejection summary and the event list for one selected cell.',
+      width: 760,
+      height: 448,
+    },
   },
 ]
 
