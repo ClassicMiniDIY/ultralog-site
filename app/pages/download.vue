@@ -4,11 +4,13 @@ import { LINKS } from '~/data/content'
 const OLDER = 10
 
 const { data } = await useReleases('download', (all) => {
-  const stable = all.filter((r) => !r.prerelease)
-  const latest = stable[0] ?? null
+  const latest = latestStable(all)
   return {
     latest,
-    older: stable.slice(1, OLDER + 1).map((r) => ({ tag: r.tag, url: r.url, publishedAt: r.publishedAt })),
+    older: all
+      .filter((r) => !r.prerelease && r !== latest)
+      .slice(0, OLDER)
+      .map((r) => ({ tag: r.tag, url: r.url, publishedAt: r.publishedAt })),
   }
 })
 const latest = computed(() => data.value?.latest ?? null)

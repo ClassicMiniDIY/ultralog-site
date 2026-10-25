@@ -26,5 +26,8 @@ const heading = computed(() => `h${props.headingLevel}`)
     <ul v-else-if="release.highlights.length">
       <li v-for="(h, i) in release.highlights" :key="i" v-html="h" />
     </ul>
+    <p v-else class="ul-caption ul-release__none">
+      No notes were written for this release. The changes are listed <a :href="release.url">on GitHub</a>.
+    </p>
   </article>
 </template>

@@ -9,7 +9,9 @@
     "preview": "bunx serve .output/public",
     "typecheck": "nuxt typecheck",
     "postinstall": "nuxt prepare",
-    "screenshots": "bun scripts/screenshots.ts"
+    "screenshots": "bun scripts/screenshots.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "marked": "^18.1.1",
@@ -23,6 +25,7 @@
     "sharp": "^0.34",
     "tailwindcss": "^4.3.3",
     "typescript": "^6",
+    "vitest": "^4",
     "vue-tsc": "^3.3.13",
     "wrangler": "4.152.0"
   }

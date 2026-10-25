@@ -1,4 +1,5 @@
 import type { Arch, Platform, Release, ReleaseAsset } from '#shared/types/site'
+import { formatSize } from './format'
 
 export interface Visitor {
   platform: Platform | null
@@ -44,6 +45,12 @@ export interface PlatformBuild {
   primary: ReleaseAsset
   /** Another build for the same OS (the Intel DMG beside the Apple Silicon one). */
   alternate: ReleaseAsset | null
+  /**
+   * The visitor's system, and `primary` runs on it. macOS and Windows count when the arch differs
+   * (Rosetta, Windows on Arm x64 emulation); Linux needs the exact arch, so a Raspberry Pi is not
+   * offered the x86-64 build as "Your system".
+   */
+  forVisitor: boolean
 }
 
 const OS_NAMES: Record<Platform, string> = { macos: 'macOS', windows: 'Windows', linux: 'Linux' }
@@ -62,13 +69,15 @@ export function platformBuilds(release: Release | null | undefined, visitor: Vis
     const preferArch: Arch = visitor?.platform === platform && visitor.arch ? visitor.arch : platform === 'macos' ? 'arm64' : 'x86-64'
     const primary = builds.find((a) => a.arch === preferArch) ?? builds[0]!
     const alternate = builds.find((a) => a !== primary && a.arch !== primary.arch) ?? null
-    out.push({ platform, os: OS_NAMES[platform], primary, alternate })
+    const forVisitor =
+      visitor?.platform === platform && (platform !== 'linux' || !visitor.arch || primary.arch === visitor.arch)
+    out.push({ platform, os: OS_NAMES[platform], primary, alternate, forVisitor })
   }
   return out
 }
 
 export function archLabel(asset: ReleaseAsset): string {
-  if (asset.platform === 'macos') return asset.arch === 'arm64' ? 'Apple Silicon' : 'Intel'
+  if (asset.platform === 'macos') return asset.arch === 'arm64' ? 'Apple Silicon' : asset.arch === 'x86-64' ? 'Intel' : 'Universal'
   return asset.arch ?? ''
 }
 
@@ -78,6 +87,7 @@ export function assetMeta(asset: ReleaseAsset): string {
   return [lead, asset.kind, formatSize(asset.size)].filter(Boolean).join(' · ')
 }
 
+/** The release marked `latest` at build (highest stable version, server/utils/github.ts). */
 export function latestStable(releases: Release[] | null | undefined): Release | null {
-  return releases?.find((r) => !r.prerelease) ?? null
+  return releases?.find((r) => r.latest) ?? null
 }

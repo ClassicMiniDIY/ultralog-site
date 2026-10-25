@@ -9,7 +9,7 @@ const visitor = useVisitor()
 const build = computed(() => {
   const p = visitor.value?.platform
   if (!p) return null
-  return platformBuilds(props.release, visitor.value).find((b) => b.platform === p) ?? null
+  return platformBuilds(props.release, visitor.value).find((b) => b.platform === p && b.forVisitor) ?? null
 })
 const version = computed(() => props.release?.tag ?? '')
 const caption = computed(() => {

@@ -2,11 +2,11 @@ import type { Release } from '#shared/types/site'
 import type { Visitor } from '~/utils/platform'
 
 /**
- * Releases from the prerendered /api/releases. `pick` keeps a page's payload to what it renders,
+ * Releases from the prerendered /api/releases.json. `pick` keeps a page's payload to what it renders,
  * so `/` carries one release, not every release note ever written.
  */
 export function useReleases<T>(key: string, pick: (all: Release[]) => T) {
-  return useFetch('/api/releases', {
+  return useFetch('/api/releases.json', {
     key: `releases:${key}`,
     transform: (all: Release[]) => pick(all),
   })

@@ -36,6 +36,9 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
+      - name: Unit tests
+        run: bun run test
+
       # Every route is prerendered here, including the GitHub releases and the wiki/OECUA ECU data.
       # A failed releases fetch fails this step, so a deploy never ships without downloads.
       - name: Generate

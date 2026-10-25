@@ -23,8 +23,8 @@ ultralog-site/
 │   └── utils/                  # platform.ts (OS detection, cards), theme.ts (bootstrap), icons, format
 ├── shared/                     # types/site.ts, utils/ecus.ts (18 formats; used by app, server, config)
 ├── server/
-│   ├── api/releases.get.ts     # every release, normalized (prerendered to JSON)
-│   ├── api/ecus/[slug].get.ts  # wiki section + OECUA channel map for one format (prerendered)
+│   ├── api/releases.json.get.ts  # every release, normalized (prerendered)
+│   ├── api/ecus/[slug].get.ts    # /api/ecus/<slug>.json: wiki section + OECUA channel map
 │   ├── routes/                 # sitemap.xml, robots.txt
 │   └── utils/                  # github.ts (fetch + normalize), markdown.ts, ecus.ts (wiki, OECUA)
 ├── public/                     # logos, favicon, og.png, screenshots/*.webp
@@ -73,11 +73,15 @@ ultralog-site/
   2025). Today's assets are `ultralog-macos-arm64.dmg`, `ultralog-macos-intel.dmg`,
   `ultralog-windows.zip`, `ultralog-linux.tar.gz`.
 - Release notes: the body is cut at `## Installation` (the boilerplate install steps, the
-  generated "What's Changed" list with its emoji headings, and the changelog link). The rest is
+  generated "What's Changed" list with its emoji headings, and the changelog link). About 35 older
+  bodies open with `## Installation`; for those the generated PR list is used instead, without
+  the emoji group headings and with "by @user in <url>" shortened to a PR link. The rest is
   rendered to HTML at build. The ReleaseCard bullets are the body's top-level list items (bold
-  lead kept), up to six; the full rendered notes go on `/releases`.
-- `/api/releases` is a Nitro route listed in `nitro.prerender.routes`, so it is fetched once during
-  `nuxt generate` and written out as a static JSON file. Pages call `useFetch('/api/releases')`
+  lead kept, hard-wrapped lines joined), up to six; the full rendered notes go on `/releases`.
+- "Latest" is the highest stable semver, not the newest by date, so a 2.x backport published
+  after 3.0.0 does not replace 3.0.0 in the hero and downloads.
+- `/api/releases.json` is a Nitro route listed in `nitro.prerender.routes`, so it is fetched once during
+  `nuxt generate` and written out as a static JSON file. Pages call `useFetch('/api/releases.json')`
   with `transform` so `/` only carries the latest release in its payload.
 - Prereleases: never the hero version, DownloadCards or "Latest". Listed on `/releases` with a
   "Pre-release" warning badge.

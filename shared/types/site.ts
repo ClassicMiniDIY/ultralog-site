@@ -21,6 +21,8 @@ export interface Release {
   url: string
   publishedAt: string
   prerelease: boolean
+  /** The highest stable version: the one the hero, downloads and "Latest" badge use. */
+  latest: boolean
   /** Top-level bullets of the release notes, as inline HTML (bold lead kept). */
   highlights: string[]
   /** Release notes as HTML, without the install boilerplate and the generated changelog. */

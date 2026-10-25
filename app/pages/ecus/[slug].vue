@@ -8,7 +8,7 @@ const slug = String(route.params.slug)
 const ecu = findEcu(slug)
 if (!ecu) throw createError({ statusCode: 404, statusMessage: 'Format not found', fatal: true })
 
-const { data } = await useFetch<EcuDetail>(`/api/ecus/${slug}`, { key: `ecu:${slug}` })
+const { data } = await useFetch<EcuDetail>(`/api/ecus/${slug}.json`, { key: `ecu:${slug}` })
 
 const sampleUrl = ecu.sample ? `${LINKS.exampleLogs}/${ecu.sample.split('/').map(encodeURIComponent).join('/')}` : null
 

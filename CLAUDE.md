@@ -31,14 +31,22 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   `useTheme` must agree on the storage keys. Do not set `data-theme` through `useHead`
   `htmlAttrs`/`bodyAttrs`: hydration would overwrite the stored choice.
 - **Release data is fetched once per build** (`server/utils/github.ts`, module-level promise) and
-  a failure fails the build on purpose. Pages read `/api/releases` through `useReleases(key, pick)`
+  a failure fails the build on purpose. Pages read `/api/releases.json` through `useReleases(key, pick)`
   so each page's payload holds only what it renders.
-- **Release notes** are cut at `## Installation` / `## What's Changed` before rendering, and all
-  Markdown from GitHub or the wiki goes through `createMarkdown` (raw HTML dropped, http(s) links
-  only). Keep that true for anything rendered with `v-html`.
-- **ECU pages** render the wiki's Supported-ECU-Formats section whose `## ` heading starts with
-  `wikiSection` (`shared/utils/ecus.ts`). Renaming a heading in the wiki blanks that page's copy
-  (the build logs a warning). Channel tables come from the OpenECU Alliance adapter in `oecua`.
+- **Release notes** are cut at `## Installation` / `## What's Changed` before rendering (older
+  bodies that open with `## Installation` fall back to the generated PR list). All Markdown from
+  GitHub or the wiki goes through `createMarkdown`: raw HTML dropped, image alt text escaped, and
+  links resolved against the source's GitHub URL and kept only if http(s)/mailto. Resolving also
+  keeps relative links away from the prerender crawler, which would otherwise 404 and fail the
+  build. Keep that true for anything rendered with `v-html`; `test/markdown.test.ts` covers it.
+- **"Latest" is the highest stable semver** (`prepareReleases`), not the newest by date, so a 2.x
+  backport published after 3.0.0 does not take over the hero and downloads.
+- **API files end in `.json`** (`/api/releases.json`, `/api/ecus/<slug>.json`) so Cloudflare serves
+  them as JSON; an extensionless static file gets no content type.
+- **ECU pages** render the wiki's Supported-ECU-Formats section headed `## <wikiSection>`
+  (optionally followed by ` - …` or ` / …`; `shared/utils/ecus.ts`). Renaming a heading in the wiki
+  fails the CI build; a wiki or OECUA fetch failure only adds a `::warning::` so an outage does not
+  block a release deploy. Channel tables come from the OpenECU Alliance adapter in `oecua`.
 - **Screenshots** are committed WebP files in `public/screenshots/<name>-{760,1520}.webp`,
   generated from `source/screenshots/*.png`. `@nuxt/image` was dropped: its static output only
   covered the visible tab and named WebP files `.png`, which Cloudflare serves as `image/png`.

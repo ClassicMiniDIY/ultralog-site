@@ -41,8 +41,20 @@ export function useTheme() {
       apply()
     }
     mq.addEventListener('change', onChange)
-    onBeforeUnmount(() => mq.removeEventListener('change', onChange))
-    ready.value = true
+    // A choice made in another tab applies here too.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_INTENSITY && isIntensity(e.newValue)) intensity.value = e.newValue
+      if (e.key === STORAGE_CVD) cvd.value = e.newValue === '1'
+    }
+    window.addEventListener('storage', onStorage)
+    onBeforeUnmount(() => {
+      mq.removeEventListener('change', onChange)
+      window.removeEventListener('storage', onStorage)
+    })
+    // After the stored values above have flushed, so loading them does not write them back.
+    nextTick(() => {
+      ready.value = true
+    })
   })
 
   watch(intensity, (v) => {

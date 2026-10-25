@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const { data: releases } = await useReleases('all', (all) => all)
-const latestTag = computed(() => latestStable(releases.value)?.tag)
 
 useSeoMeta({
   title: 'Releases',
@@ -19,7 +18,7 @@ useSeoMeta({
           v-for="r in releases ?? []"
           :key="r.tag"
           :release="r"
-          :latest="r.tag === latestTag"
+          :latest="r.latest"
           :heading-level="2"
           full
         />

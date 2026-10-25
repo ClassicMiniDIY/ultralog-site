@@ -1,19 +1,31 @@
 import type { EcuChannel } from '#shared/types/site'
+import { createMarkdown } from './markdown'
 
 const WIKI_RAW = 'https://raw.githubusercontent.com/wiki/ClassicMiniDIY/UltraLog/Supported-ECU-Formats.md'
 const WIKI_BASE = 'https://github.com/ClassicMiniDIY/UltraLog/wiki'
 const OECUA_API = 'https://oecua.org/api/adapters'
 const OECUA_SITE = 'https://oecua.org/adapters'
 
-// The wiki section's `###` headings sit under the page's h1, so they become h2.
-const wikiMarkdown = createMarkdown({ headingShift: -1 })
+// The wiki section's `###` headings sit under the page's h1, so they become h2. Relative links
+// (`User-Guide#computed-channels`) resolve against the wiki, as they do on GitHub.
+const wikiMarkdown = createMarkdown({ baseUrl: `${WIKI_BASE}/`, headingShift: -1 })
+
+/**
+ * A data source did not give what a page expects. In CI a moved wiki heading fails the build
+ * (it would otherwise deploy blank ECU pages unnoticed); network failures only annotate the run,
+ * so an outage of oecua.org or raw.githubusercontent.com does not block a release deploy.
+ */
+function reportMiss(message: string, { failInCi }: { failInCi: boolean }) {
+  if (process.env.CI && failInCi) throw new Error(`[ecus] ${message}`)
+  console.warn(process.env.GITHUB_ACTIONS ? `::warning title=ECU data::${message}` : `[ecus] ${message}`)
+}
 
 let wikiPage: Promise<string | null> | null = null
 
 function fetchWikiPage(): Promise<string | null> {
   wikiPage ??= $fetch<string>(WIKI_RAW, { responseType: 'text' }).catch((err: unknown) => {
     // The ECU pages still build without the wiki copy; they show the summary and link to the wiki.
-    console.warn(`[ecus] wiki fetch failed: ${String(err)}`)
+    reportMiss(`wiki fetch failed: ${String(err)}`, { failInCi: false })
     return null
   })
   return wikiPage
@@ -28,14 +40,23 @@ function rewriteWikiLinks(md: string): string {
   })
 }
 
-/** The wiki section whose `## ` heading starts with `heading`, rendered without its heading. */
+/**
+ * True when a `## ` heading line names `heading`: the whole title, or the title followed by
+ * " - Full Support" / " / Honda Tuning Studio". `Link ECU` does not match `Link ECU G5 CAN`.
+ */
+export function headingMatches(line: string, heading: string): boolean {
+  const esc = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`^## ${esc}(?:\\s*$| - | / )`).test(line)
+}
+
+/** The wiki section whose `## ` heading names `heading`, rendered without its heading. */
 export async function getWikiSection(heading: string): Promise<string | null> {
   const page = await fetchWikiPage()
   if (!page) return null
   const sections = page.replace(/\r\n/g, '\n').split(/\n(?=## )/)
-  const section = sections.find((s) => s.startsWith(`## ${heading}`))
+  const section = sections.find((s) => headingMatches(s.split('\n', 1)[0] ?? '', heading))
   if (!section) {
-    console.warn(`[ecus] no wiki section starts with "## ${heading}"`)
+    reportMiss(`no Supported-ECU-Formats wiki section is headed "## ${heading}"`, { failInCi: true })
     return null
   }
   const body = section
@@ -74,6 +95,7 @@ const UNIT_LABELS: Record<string, string> = {
   volts: 'V',
   volt: 'V',
   millivolts: 'mV',
+  decibels: 'dB',
   amps: 'A',
   ms: 'ms',
   milliseconds: 'ms',
@@ -93,7 +115,7 @@ function fetchAdapter(ref: string): Promise<OecuaAdapter | null> {
   let p = adapters.get(ref)
   if (!p) {
     p = $fetch<OecuaAdapter>(`${OECUA_API}/${ref}`).catch((err: unknown) => {
-      console.warn(`[ecus] OECUA adapter ${ref} fetch failed: ${String(err)}`)
+      reportMiss(`OECUA adapter ${ref} fetch failed: ${String(err)}`, { failInCi: false })
       return null
     })
     adapters.set(ref, p)

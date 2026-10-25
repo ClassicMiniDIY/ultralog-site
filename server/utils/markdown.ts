@@ -1,17 +1,34 @@
 import { Marked, type Tokens } from 'marked'
 
-const SAFE_HREF = /^(https?:|mailto:|\/|#)/i
+const SAFE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/** Absolute http(s)/mailto URL for `href` resolved against `baseUrl`, or null if it is anything else. */
+export function resolveHref(href: string, baseUrl: string): string | null {
+  try {
+    const url = new URL(href, baseUrl)
+    return SAFE_PROTOCOLS.has(url.protocol) ? url.href : null
+  } catch {
+    return null
+  }
 }
 
 /**
- * Markdown → HTML for content we did not write on this site (release bodies, wiki sections).
- * Raw HTML in the source is dropped, links are limited to http(s)/mailto/relative, and headings
- * move by `headingShift` levels (clamped to h2-h6).
+ * Markdown → HTML for content this site did not write (release bodies, wiki sections), safe for
+ * `v-html`: raw HTML is dropped, images become their escaped alt text, and every link is resolved
+ * against `baseUrl` (where the source lives on GitHub) and kept only if it is http(s) or mailto.
+ * Resolving also keeps site-relative links out of the prerender crawler. Headings move by
+ * `headingShift` levels (clamped to h2-h6).
  */
-export function createMarkdown(options: { headingShift?: number } = {}) {
+export function createMarkdown(options: { baseUrl: string; headingShift?: number }) {
   const shift = options.headingShift ?? 0
   return new Marked({
     gfm: true,
@@ -25,15 +42,14 @@ export function createMarkdown(options: { headingShift?: number } = {}) {
       },
       link({ href, title, tokens }: Tokens.Link) {
         const text = this.parser.parseInline(tokens)
-        if (!SAFE_HREF.test(href)) return text
-        const external = /^https?:/i.test(href)
-        const t = title ? ` title="${escapeAttr(title)}"` : ''
-        const rel = external ? ' rel="noopener"' : ''
-        return `<a href="${escapeAttr(href)}"${t}${rel}>${text}</a>`
+        const url = resolveHref(href, options.baseUrl)
+        if (!url) return text
+        const t = title ? ` title="${escapeHtml(title)}"` : ''
+        return `<a href="${escapeHtml(url)}"${t} rel="noopener">${text}</a>`
       },
       image({ text }: Tokens.Image) {
-        // Release notes and wiki images are hosted elsewhere and carry no size; keep the alt text only.
-        return text
+        // Hosted elsewhere and unsized; keep the alt text. `text` is raw source, so escape it.
+        return escapeHtml(text)
       },
     },
   })
