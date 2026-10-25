@@ -55,7 +55,7 @@ jobs:
 
       - name: Smoke test
         env:
-          TARGET: https://ultralog-site.classicminidiy.workers.dev
+          TARGET: https://ultralog.co
         run: |
           set -euo pipefail
           for path in / /download /releases /docs /ecus /ecus/haltech /sitemap.xml; do

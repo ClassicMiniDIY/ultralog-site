@@ -59,5 +59,9 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   generated from `source/screenshots/*.png`. `@nuxt/image` was dropped: its static output only
   covered the visible tab and named WebP files `.png`, which Cloudflare serves as `image/png`.
 - **Mode band** renders every tab panel (inactive ones `hidden`) so no panel needs a fetch.
+- **Hosting:** `ultralog.co` and `www.ultralog.co` are Worker custom domains in `wrangler.jsonc`
+  (Cloudflare owns their DNS records and certificates; do not add A/AAAA/CNAME records for them).
+  `www` 301s to the apex through a zone Single Redirect, which runs before the Worker. workers.dev
+  is off. Zone: SSL Full (strict), Always Use HTTPS, minimum TLS 1.2. Runbook: `docs/cloudflare-setup.md`.
 - `RELEASES_FIXTURE=<file>` builds from a saved API response (offline, or previewing a release
   that does not exist yet; the "New in 3.0" section only shows when the latest tag is 3.x).

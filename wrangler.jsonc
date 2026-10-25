@@ -4,6 +4,15 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ultralog-site",
   "compatibility_date": "2026-10-01",
+  // Custom domains: Cloudflare owns the DNS records and certificates for these hostnames.
+  // www 301s to the apex through a zone Single Redirect, which runs before the Worker.
+  "routes": [
+    { "pattern": "ultralog.co", "custom_domain": true },
+    { "pattern": "www.ultralog.co", "custom_domain": true }
+  ],
+  // Wrangler turns workers.dev off once routes exist; said explicitly so a missing line cannot
+  // bring back a duplicate copy of the site. CI smoke-tests ultralog.co instead.
+  "workers_dev": false,
   "assets": {
     "directory": ".output/public",
     // /download serves 200; /download/ redirects to it (same as OpenECUAlliance).
