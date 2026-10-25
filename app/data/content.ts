@@ -38,7 +38,7 @@ export const MODES: Mode[] = [
   {
     id: 'log-viewer',
     name: 'Log Viewer',
-    body: 'Stack up to 10 plot panels on one synchronized timeline. Min/max legend, playback from 0.25x to 8x, and the GPS track map beside the chart.',
+    body: 'Stack up to 10 plot panels on one synchronized timeline, or overlay a second log to compare two pulls. Min/max legend, playback from 0.25x to 8x, and the GPS track map beside the chart.',
     image: {
       name: 'chart-night',
       alt: 'UltraLog Log Viewer in Night Drive: RPM, MAP, TPS and ignition timing from a Haltech log, with min/max channel cards, the cursor legend and the playback bar.',
@@ -104,16 +104,16 @@ export const WHATS_NEW_3: NewsItem[] = [
     body: 'An indigo-black interface with one cyan accent, a sunset redline and mono numbers. One slider takes it from quiet Stealth greys to full Ultra glow, and never touches your data colours.',
   },
   {
+    title: 'Compare two logs',
+    body: 'Overlay a second log on the same chart, before and after a tune change. Channels pair by name on a shared scale, and Align at cursor lines the two pulls up.',
+  },
+  {
     title: 'A new export sheet',
     body: 'Charts, scatter plots, histograms and tuning tables export on one clean sheet, PDF or PNG, on light Paper or dark Graphite. PDFs carry real, selectable text.',
   },
   {
-    title: 'Lambda delay tables',
-    body: 'Measures how long the wideband takes to respond to injector steps, binned by RPM and load, ready for your ECU’s closed-loop O2 delay table.',
-  },
-  {
-    title: 'Accel enrichment tables',
-    body: 'Reports the lean or rich excursion on every tip-in with a suggested starting correction. Runs across several logs at once.',
+    title: 'Lambda delay and accel enrichment tables',
+    body: 'Measures how long the wideband takes to respond, binned by RPM and load, and the lean or rich excursion on every tip-in with a suggested correction. Runs across several logs at once.',
   },
   {
     title: 'TunerStudio MSL, RaceChrono and Torque Pro',
