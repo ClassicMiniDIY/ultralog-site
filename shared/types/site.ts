@@ -43,6 +43,17 @@ export interface DocPage {
   sourceUrl: string
 }
 
+/** One section of a docs page in the search index: the page intro, or an h2/h3 and its body. */
+export interface SearchEntry {
+  /** `/docs/user-guide#exporting`; no anchor for the intro. */
+  path: string
+  page: string
+  /** Null for the intro (the text before the first heading). */
+  heading: string | null
+  /** Plain text of the section, whitespace collapsed. */
+  text: string
+}
+
 export interface DocNavGroup {
   title: string
   items: { path: string; title: string }[]

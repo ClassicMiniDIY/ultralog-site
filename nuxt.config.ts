@@ -62,6 +62,7 @@ export default defineNuxtConfig({
         ...ECUS.map((e) => `/ecus/${e.slug}`),
         ...ECUS.map((e) => `/api/ecus/${e.slug}.json`),
         '/api/docs-nav.json',
+        '/api/search-index.json',
         ...WIKI.map((f) => docsPath(f)),
         ...WIKI.map((f) => `/api/docs/${f.slug || 'index'}.json`),
       ],

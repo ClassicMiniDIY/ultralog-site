@@ -246,6 +246,7 @@ a { color: inherit; }
 .ul-footer__legal a, .ul-section__lede a, .ul-dl__alt a, .ul-older__more a, .ul-docs__help a, .ul-prose a, .ul-release li a { text-decoration: underline; text-underline-offset: 2px; }
 /* Without JS the tabs cannot switch, so every mode panel is shown and the tab row is hidden. */
 html:not(.js) .ul-modes .ul-modenav { display: none; }
+html:not(.js) .ul-search { display: none; }
 html:not(.js) .ul-modes__panel[hidden] { display: grid; border-top: 1px solid var(--line-subtle); }
 .ul-release__none { margin: 0; } .ul-release__none a { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 2px; }
 
@@ -261,7 +262,9 @@ html:not(.js) .ul-modes__panel[hidden] { display: grid; border-top: 1px solid va
 .ul-docs__side { display: none; }
 @media (min-width: 900px) {
   .ul-docs__fold { display: none; }
-  .ul-docs__side { display: block; position: sticky; top: var(--space-6); max-height: calc(100vh - 48px); overflow-y: auto; }
+  /* The nav is sticky (not the list) so the search dropdown is not clipped by the list's scroll box. */
+  .ul-docs__nav { position: sticky; z-index: 1; top: var(--space-6); align-self: start; display: flex; flex-direction: column; max-height: calc(100vh - 48px); }
+  .ul-docs__side { display: block; min-height: 0; overflow-y: auto; }
 }
 .ul-docs__fold summary { list-style: none; }
 .ul-docs__fold summary::-webkit-details-marker { display: none; }
@@ -278,6 +281,30 @@ html:not(.js) .ul-modes__panel[hidden] { display: grid; border-top: 1px solid va
 .ul-docs__toc h2 { margin: 0 0 var(--space-2); }
 .ul-docs__edit { margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px solid var(--line-subtle); display: flex; gap: var(--space-4); flex-wrap: wrap; }
 .ul-docs__edit a { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Docs search (DocsSearch.vue): combobox above the docs sidebar, results drop down over the page. */
+.ul-docs__nav { display: flex; flex-direction: column; gap: var(--space-3); }
+@media (min-width: 900px) { .ul-docs__nav { gap: var(--space-4); } }
+.ul-search { position: relative; }
+.ul-search__box { display: flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-2) 0 10px; background: var(--bg-field); border: 1px solid var(--line-control); border-radius: var(--radius-sm); color: var(--ink-muted); }
+.ul-search__box:focus-within { border-color: var(--cyan); box-shadow: var(--focus-ring); }
+.ul-search__input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; color: var(--ink); font: 400 14px/20px var(--font-ui); outline: none; }
+.ul-search__input:focus-visible { box-shadow: none; }
+.ul-search__input::placeholder { color: var(--ink-subtle); opacity: 1; }
+.ul-search__input::-webkit-search-cancel-button { display: none; }
+.ul-search__key { min-width: 20px; padding: 1px 6px; border: 1px solid var(--line); border-radius: var(--radius-xs); font: 500 11px/16px var(--font-mono); color: var(--ink-subtle); text-align: center; }
+.ul-search__box:focus-within .ul-search__key { display: none; }
+@media (hover: none) { .ul-search__key { display: none; } }
+.ul-search__list { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; width: 100%; max-height: min(70vh, 520px); overflow-y: auto; margin: 0; padding: var(--space-1); list-style: none; background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-window); }
+@media (min-width: 900px) { .ul-search__list { width: min(480px, calc(100vw - 32px)); } }
+.ul-search__item { display: flex; flex-direction: column; gap: 2px; padding: var(--space-2) 10px; border-radius: var(--radius-sm); color: var(--ink); text-decoration: none; }
+.ul-search__item[aria-selected="true"] { background: var(--cyan-soft); box-shadow: inset 2px 0 0 var(--cyan); }
+.ul-search__where { font: 600 13px/18px var(--font-ui); color: var(--ink-muted); }
+.ul-search__heading { color: var(--ink); }
+.ul-search__item[aria-selected="true"] .ul-search__heading { color: var(--cyan); }
+.ul-search__snippet { font-size: 12px; line-height: 17px; color: var(--ink-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ul-search__snippet mark { background: transparent; color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: var(--cyan); text-underline-offset: 2px; }
+.ul-search__status { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; width: 100%; margin: 0; padding: var(--space-3); background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-md); font-size: 13px; line-height: 18px; color: var(--ink-muted); }
 .ul-prose--docs { max-width: 760px; font-size: 15px; line-height: 24px; }
 .ul-prose--docs h2 { font-size: 22px; line-height: 28px; margin-top: var(--space-8); scroll-margin-top: var(--space-6); }
 .ul-prose--docs h3 { font-size: 16px; line-height: 22px; margin-top: var(--space-6); scroll-margin-top: var(--space-6); }

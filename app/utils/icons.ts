@@ -14,6 +14,7 @@ export const ICONS = {
   arrow: ['M5 12h14M13 6l6 6-6 6'],
   file: ['M6 3.5h8l4.5 4.5v12.5H6z', 'M14 3.5V8h4.5'],
   book: ['M4.5 5.5A2 2 0 0 1 6.5 3.5h13v14h-13a2 2 0 0 0-2 2z', 'M4.5 19.5a2 2 0 0 0 2 2h13v-4'],
+  search: ['M17 10.5a6.5 6.5 0 1 1-13 0a6.5 6.5 0 1 1 13 0', 'M15.3 15.3L20 20'],
 } as const
 
 export type IconName = keyof typeof ICONS
