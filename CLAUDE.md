@@ -69,5 +69,16 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   (Cloudflare owns their DNS records and certificates; do not add A/AAAA/CNAME records for them).
   `www` 301s to the apex through a zone Single Redirect, which runs before the Worker. workers.dev
   is off. Zone: SSL Full (strict), Always Use HTTPS, minimum TLS 1.2. Runbook: `docs/cloudflare-setup.md`.
+- **Cache headers and redirects** are asset files, not Worker code. `public/_headers` makes the
+  content-hashed `/_nuxt/<file>` immutable and gives fixed-name images one day. Without it every
+  asset is `max-age=0, must-revalidate` and each page view re-checks every script, font and image,
+  which shows in the Worker metrics as a flood of 304s. `/_nuxt/:file` matches one segment so
+  `/_nuxt/builds/*.json` (Nuxt's new-deploy check) stays revalidated; two rules that set the same
+  header are joined with a comma, so rules must not overlap. `_redirects` is the prerendered
+  `server/routes/_redirects.ts`: wiki-cased docs paths (`/docs/User-Guide`) 301 to the slugs, and
+  `/apple-touch-icon-precomposed.png` serves the touch icon. Matching is case-sensitive (checked:
+  no loop). `public/favicon.ico` exists because browsers and crawlers request it unasked
+  (`bun scripts/favicon.ts` rebuilds it from the SVG). Trailing-slash 307s come from
+  `html_handling` and cannot be changed to 301.
 - `RELEASES_FIXTURE=<file>` builds from a saved API response (offline, or previewing a release
   that does not exist yet; the "New in 3.0" section only shows when the latest tag is 3.x).
