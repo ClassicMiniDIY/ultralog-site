@@ -59,6 +59,7 @@ export default defineNuxtConfig({
         '/api/releases.json',
         '/sitemap.xml',
         '/robots.txt',
+        '/_redirects',
         ...ECUS.map((e) => `/ecus/${e.slug}`),
         ...ECUS.map((e) => `/api/ecus/${e.slug}.json`),
         '/api/docs-nav.json',
