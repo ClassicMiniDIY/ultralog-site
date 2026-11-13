@@ -7,12 +7,24 @@ const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"'
 // `<code>cargo build</code>)` stays `cargo build)` and `<strong>un</strong>usual` stays one word.
 const BLOCK = /<\/?(?:p|div|li|ul|ol|h[1-6]|pre|blockquote|table|thead|tbody|tr|td|th|br|hr|dt|dd)\b[^>]*>/gi
 
+/**
+ * Drop every tag, then any `<` that still opens one (an unterminated `<script` at the end has no
+ * `>` to match). Repeats until nothing changes, so no removal can leave a tag behind. A `<` that
+ * opens nothing (`1 < 2`) stays; renderer output escapes text `<` as `&lt;` anyway.
+ */
+function stripTags(html: string): string {
+  let out = html
+  let prev: string
+  do {
+    prev = out
+    out = out.replace(/<[^>]*>/g, '').replace(/<(?=[a-z/!?])/gi, '')
+  } while (out !== prev)
+  return out
+}
+
 /** Rendered HTML to plain text: tags dropped, image alt text kept, entities decoded, whitespace collapsed. */
 export function htmlToText(html: string): string {
-  return html
-    .replace(/<img\b[^>]*?\balt="([^"]*)"[^>]*>/gi, ' $1 ')
-    .replace(BLOCK, ' ')
-    .replace(/<[^>]*>/g, '')
+  return stripTags(html.replace(/<img\b[^>]*?\balt="([^"]*)"[^>]*>/gi, ' $1 ').replace(BLOCK, ' '))
     .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === '#') {
         const code = e[1]?.toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10)
