@@ -111,6 +111,11 @@ describe('htmlToText', () => {
   it('keeps unknown entities as written', () => {
     expect(htmlToText('&bogus; &#0;')).toBe('&bogus; &#0;')
   })
+  it('leaves no tag opener behind, even an unterminated one', () => {
+    expect(htmlToText('<p>x</p><script')).toBe('x script')
+    expect(htmlToText('a<scr<b>ipt>b<scr')).toBe('aipt>bscr')
+    expect(htmlToText('1 < 2 &lt;b&gt;')).toBe('1 < 2 <b>')
+  })
 })
 
 describe('buildSearchIndex', () => {
