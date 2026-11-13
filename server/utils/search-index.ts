@@ -17,7 +17,7 @@ function stripTags(html: string): string {
   let prev: string
   do {
     prev = out
-    out = out.replace(/<[^>]*>/g, '').replace(/<(?=[a-z/!?])/gi, '')
+    out = out.replace(/<[^>]*>|<(?=[a-z/!?])/gi, '')
   } while (out !== prev)
   return out
 }
