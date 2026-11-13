@@ -74,7 +74,7 @@ useSeoMeta({
         <h3>Windows</h3>
         <ol>
           <li>Extract <code>ultralog-windows.zip</code>.</li>
-          <li>Run <code>ultralog-windows.exe</code>.</li>
+          <li>Run <code>ultralog.exe</code> (releases up to 3.1.0 named it <code>ultralog-windows.exe</code>).</li>
         </ol>
         <h3>Linux</h3>
         <ol>
