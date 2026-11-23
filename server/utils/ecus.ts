@@ -1,13 +1,19 @@
 import type { EcuChannel } from '#shared/types/site'
 import { readWikiFile, rewriteWikiLinks, wikiMarkdown } from './wiki'
+import adaptersData from '../../data/openecu/adapters.json'
 
-const OECUA_API = 'https://oecua.org/api/adapters'
-const OECUA_SITE = 'https://oecua.org/adapters'
+// Where a spec file can be read. The adapter data itself is committed in
+// data/openecu/adapters.json (regenerate with `bun scripts/sync-adapters.ts`), so nothing is
+// fetched at build. Until 2026-11 this came from the oecua.org REST API; the OpenECU Alliance
+// is retired and UltraLog owns the corpus now.
+const SPEC_SOURCE = 'https://github.com/ClassicMiniDIY/UltraLog/blob/main/spec/openecu/adapters'
 
 /**
- * A data source did not give what a page expects. In CI a missing wiki section fails the build
- * (it would otherwise deploy blank ECU pages unnoticed); an OECUA fetch failure only annotates the
- * run, so an outage of oecua.org does not block a release deploy.
+ * A data source did not give what a page expects. Both callers now fail the build in CI: a
+ * missing wiki section and a missing adapter both deploy a visibly incomplete ECU page, and
+ * both come from data committed or cloned at build rather than from a live third-party site.
+ * This used to let an adapter miss through with a warning, which is how an oecua.org outage
+ * could have shipped every ECU page with its channel table silently absent.
  */
 function reportMiss(message: string, { failInCi }: { failInCi: boolean }) {
   if (process.env.CI && failInCi) throw new Error(`[ecus] ${message}`)
@@ -45,22 +51,7 @@ export function getWikiSection(heading: string): string | null {
   return wikiMarkdown({ headingShift: -1 }).parse(rewriteWikiLinks(body)) as string
 }
 
-interface OecuaChannel {
-  name: string
-  unit?: string | null
-  category?: string
-  sourceNames?: string[]
-}
-
-interface OecuaAdapter {
-  id: string
-  name: string
-  version: string
-  vendor: string
-  channels: OecuaChannel[]
-}
-
-// OECUA unit ids → the spelling the app shows (SI casing, design-system voice rules).
+// OpenECU unit ids → the spelling the app shows (SI casing, design-system voice rules).
 const UNIT_LABELS: Record<string, string> = {
   percent: '%',
   celsius: '°C',
@@ -88,23 +79,37 @@ const UNIT_LABELS: Record<string, string> = {
   hz: 'Hz',
 }
 
-const adapters = new Map<string, Promise<OecuaAdapter | null>>()
-
-function fetchAdapter(ref: string): Promise<OecuaAdapter | null> {
-  let p = adapters.get(ref)
-  if (!p) {
-    p = $fetch<OecuaAdapter>(`${OECUA_API}/${ref}`).catch((err: unknown) => {
-      reportMiss(`OECUA adapter ${ref} fetch failed: ${String(err)}`, { failInCi: false })
-      return null
-    })
-    adapters.set(ref, p)
-  }
-  return p
+interface StoredChannel {
+  name: string
+  unit: string | null
+  category: string
+  sourceNames: string[]
 }
 
-export async function getAdapter(ref: string) {
-  const a = await fetchAdapter(ref)
-  if (!a) return null
+interface StoredAdapter {
+  id: string
+  name: string
+  version: string
+  vendor: string
+  channels: StoredChannel[]
+}
+
+const ADAPTERS = adaptersData.adapters as Record<string, StoredAdapter>
+
+/**
+ * The adapter for `ref` (`vendor/id`), or null when the committed data has no such entry —
+ * which means `shared/utils/ecus.ts` names an adapter `scripts/sync-adapters.ts` did not
+ * write. That is a build bug in this repo, not an upstream outage, so it fails CI.
+ */
+export function getAdapter(ref: string) {
+  const a = ADAPTERS[ref]
+  if (!a) {
+    reportMiss(
+      `no adapter "${ref}" in data/openecu/adapters.json (run \`bun scripts/sync-adapters.ts\`)`,
+      { failInCi: true },
+    )
+    return null
+  }
   const channels: EcuChannel[] = a.channels.map((c) => ({
     name: c.name,
     unit: c.unit ? (UNIT_LABELS[c.unit.toLowerCase()] ?? c.unit) : null,
@@ -112,7 +117,12 @@ export async function getAdapter(ref: string) {
     sourceNames: c.sourceNames ?? [],
   }))
   return {
-    adapter: { id: a.id, name: a.name, version: a.version, url: `${OECUA_SITE}/${ref}` },
+    adapter: {
+      id: a.id,
+      name: a.name,
+      version: a.version,
+      url: `${SPEC_SOURCE}/${ref}.adapter.yaml`,
+    },
     channels,
   }
 }

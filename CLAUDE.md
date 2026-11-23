@@ -47,8 +47,24 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   them as JSON; an extensionless static file gets no content type.
 - **ECU pages** render the wiki's Supported-ECU-Formats section headed `## <wikiSection>`
   (optionally followed by ` - …` or ` / …`; `shared/utils/ecus.ts`). Renaming a heading in the wiki
-  fails the CI build; a wiki or OECUA fetch failure only adds a `::warning::` so an outage does not
-  block a release deploy. Channel tables come from the OpenECU Alliance adapter in `oecua`.
+  fails the CI build, and so does naming an `oecua` adapter the committed data does not contain:
+  both would otherwise deploy a visibly incomplete page.
+- **Channel tables come from committed data, not a live site.** `data/openecu/adapters.json`
+  holds the 9 adapters the ECU pages need, trimmed to the fields they render, generated from the
+  OpenECU spec corpus in `ClassicMiniDIY/UltraLog` (`spec/openecu/adapters/`) by
+  `scripts/sync-adapters.ts`. **Regenerating is a manual step and is deliberately NOT part of
+  `build`** — unlike `sync-wiki.ts`, which clones at build. The wiki is prose whose absence is
+  obvious; a missing adapter empties a structured table that nobody notices, so this data is
+  committed and the build reads no network.
+  - Refresh it with `bun scripts/sync-adapters.ts` (add `--ref <tag>` or `--from ../UltraLog`),
+    then commit. The file records the source ref and a sha256 per spec.
+  - **The spec is snake_case (`source_names`).** Until 2026-11 this came from the `oecua.org`
+    REST API, which served the same data camelCased (`sourceNames`). Reading YAML with the old
+    mapping leaves every channel with an empty source-name list and no error — the generator
+    does the conversion, so do not reintroduce a camelCase assumption.
+  - History: the site used to fetch `oecua.org/api/adapters` at build with `failInCi: false`, so
+    an outage shipped every ECU page with its channel table silently missing. The OpenECU
+    Alliance was retired on 2026-11-23 and UltraLog owns the corpus.
 - **Docs are the GitHub wiki**, cloned into `.wiki/` by `scripts/sync-wiki.ts` (the `dev`,
   `generate` and `build` scripts run it first; `WIKI_DIR=../UltraLog.wiki` previews a local
   checkout, including unpushed edits). `nuxt.config.ts` reads the clone for the prerender list,

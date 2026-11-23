@@ -46,7 +46,7 @@ useSeoMeta({
           <h2 id="channels-title" class="ul-section__title">Channel names</h2>
           <p class="ul-section__lede">
             With field normalization on, these {{ ecu.name }} names show as one standard name. From the
-            <a v-if="data.adapter" :href="data.adapter.url">OpenECU Alliance {{ data.adapter.name }} adapter</a>
+            <a v-if="data.adapter" :href="data.adapter.url">{{ data.adapter.name }} adapter spec</a>
             <span class="ul-mono"> v{{ data.adapter?.version }}</span>.
           </p>
         </div>
