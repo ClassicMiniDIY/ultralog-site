@@ -2,18 +2,18 @@ import type { EcuChannel } from '#shared/types/site'
 import { readWikiFile, rewriteWikiLinks, wikiMarkdown } from './wiki'
 import adaptersData from '../../data/openecu/adapters.json'
 
-// Where a spec file can be read. The adapter data itself is committed in
-// data/openecu/adapters.json (regenerate with `bun scripts/sync-adapters.ts`), so nothing is
-// fetched at build. Until 2026-11 this came from the oecua.org REST API; the OpenECU Alliance
-// is retired and UltraLog owns the corpus now.
-const SPEC_SOURCE = 'https://github.com/ClassicMiniDIY/UltraLog/blob/main/spec/openecu/adapters'
+// Where a spec file can be read. Built from the provenance the data file records, so the link
+// points at the ref the committed data actually came from — hardcoding `main` would show a
+// version string from a tag beside a link to different content. The adapter data itself is
+// committed in data/openecu/adapters.json (regenerate with `bun run sync:adapters`), so the
+// build fetches no adapter data. Until 2026-11 this came from the oecua.org REST API; the
+// OpenECU Alliance is retired and UltraLog owns the corpus now.
+const { repo, ref, corpus } = adaptersData.source
+const SPEC_SOURCE = `https://github.com/${repo}/blob/${ref.replace(/-dirty$/, '')}/${corpus}`
 
 /**
- * A data source did not give what a page expects. Both callers now fail the build in CI: a
- * missing wiki section and a missing adapter both deploy a visibly incomplete ECU page, and
- * both come from data committed or cloned at build rather than from a live third-party site.
- * This used to let an adapter miss through with a warning, which is how an oecua.org outage
- * could have shipped every ECU page with its channel table silently absent.
+ * A data source did not give what a page expects. In CI a missing wiki section fails the build;
+ * see `getAdapter` for why a missing adapter throws unconditionally instead.
  */
 function reportMiss(message: string, { failInCi }: { failInCi: boolean }) {
   if (process.env.CI && failInCi) throw new Error(`[ecus] ${message}`)
@@ -71,12 +71,40 @@ const UNIT_LABELS: Record<string, string> = {
   milliseconds: 'ms',
   seconds: 's',
   degrees: '°',
+  'deg/s': '°/s',
+  kph: 'km/h',
   kmh: 'km/h',
   mph: 'mph',
   lambda: 'λ',
   afr: 'AFR',
   g: 'g',
+  'g/s': 'g/s',
+  mg: 'mg',
   hz: 'Hz',
+  'rpm/s': 'rpm/s',
+  'kpa/s': 'kPa/s',
+  'percent/s': '%/s',
+  mpa: 'MPa',
+  ma: 'mA',
+  ohms: 'Ω',
+  nm: 'N·m',
+  'm/s2': 'm/s²',
+  millimeters: 'mm',
+  meters: 'm',
+  kilometers: 'km',
+  liters: 'L',
+  'l/h': 'L/h',
+  'cc/min': 'cc/min',
+  // Dimensionless counters and codes. The spec gives them a `unit` so a consumer knows the
+  // quantity, but printing the word "count" in a unit column is noise — show nothing.
+  count: '',
+  gear: '',
+  code: '',
+  lap: '',
+  ratio: '',
+  multiplier: '',
+  bytes: '',
+  version: '',
 }
 
 interface StoredChannel {
@@ -101,14 +129,17 @@ const ADAPTERS = adaptersData.adapters as Record<string, StoredAdapter>
  * which means `shared/utils/ecus.ts` names an adapter `scripts/sync-adapters.ts` did not
  * write. That is a build bug in this repo, not an upstream outage, so it fails CI.
  */
-export function getAdapter(ref: string) {
-  const a = ADAPTERS[ref]
+export function getAdapter(specRef: string) {
+  const a = ADAPTERS[specRef]
+  // Throws everywhere, not just in CI. The page wraps its channel table in
+  // `v-if="data?.channels.length"`, so a miss does not render an incomplete section — the whole
+  // section vanishes with nothing to notice. And a missing key in a committed file is a repo
+  // bug that will never fix itself on retry, unlike the network fetch `failInCi` was written
+  // for: `shared/utils/ecus.ts` names an adapter `scripts/sync-adapters.ts` did not write.
   if (!a) {
-    reportMiss(
-      `no adapter "${ref}" in data/openecu/adapters.json (run \`bun scripts/sync-adapters.ts\`)`,
-      { failInCi: true },
+    throw new Error(
+      `[ecus] no adapter "${specRef}" in data/openecu/adapters.json (run \`bun run sync:adapters\`)`,
     )
-    return null
   }
   const channels: EcuChannel[] = a.channels.map((c) => ({
     name: c.name,
@@ -121,7 +152,7 @@ export function getAdapter(ref: string) {
       id: a.id,
       name: a.name,
       version: a.version,
-      url: `${SPEC_SOURCE}/${ref}.adapter.yaml`,
+      url: `${SPEC_SOURCE}/${specRef}.adapter.yaml`,
     },
     channels,
   }

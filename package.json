@@ -12,7 +12,8 @@
     "screenshots": "bun scripts/screenshots.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync:wiki": "bun scripts/sync-wiki.ts"
+    "sync:wiki": "bun scripts/sync-wiki.ts",
+    "sync:adapters": "bun scripts/sync-adapters.ts"
   },
   "dependencies": {
     "marked": "^18.1.1",

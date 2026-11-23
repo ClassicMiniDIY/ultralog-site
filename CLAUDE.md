@@ -47,24 +47,34 @@ UI follows `design/` (the Night Drive handoff): `design/design-system/README.md`
   them as JSON; an extensionless static file gets no content type.
 - **ECU pages** render the wiki's Supported-ECU-Formats section headed `## <wikiSection>`
   (optionally followed by ` - …` or ` / …`; `shared/utils/ecus.ts`). Renaming a heading in the wiki
-  fails the CI build, and so does naming an `oecua` adapter the committed data does not contain:
-  both would otherwise deploy a visibly incomplete page.
+  fails the CI build. Naming an `oecua` adapter the committed data does not contain throws
+  unconditionally, in CI and locally: a missing key in a committed file is a repo bug that no
+  retry fixes, and its symptom is a section that disappears rather than one that looks broken.
 - **Channel tables come from committed data, not a live site.** `data/openecu/adapters.json`
   holds the 9 adapters the ECU pages need, trimmed to the fields they render, generated from the
   OpenECU spec corpus in `ClassicMiniDIY/UltraLog` (`spec/openecu/adapters/`) by
   `scripts/sync-adapters.ts`. **Regenerating is a manual step and is deliberately NOT part of
   `build`** — unlike `sync-wiki.ts`, which clones at build. The wiki is prose whose absence is
-  obvious; a missing adapter empties a structured table that nobody notices, so this data is
-  committed and the build reads no network.
-  - Refresh it with `bun scripts/sync-adapters.ts` (add `--ref <tag>` or `--from ../UltraLog`),
-    then commit. The file records the source ref and a sha256 per spec.
+  obvious; a missing adapter makes the whole channel section vanish (the page's
+  `v-if="data?.channels.length"`), which nobody notices. So this data is committed and the build
+  fetches no adapter data. The build does still reach the network for the wiki clone and the
+  GitHub releases list — this is narrower than "the build reads no network".
+  - Refresh it with `bun run sync:adapters` (add `--ref <tag>` or `--from ../UltraLog`), then
+    commit. It prints the channel-count change per adapter, so a regression is visible before you
+    commit. The file records the ref it came from — a real HEAD sha, `-dirty` where the local tree
+    was modified — plus a sha256 per spec for auditing against upstream by hand. Nothing reads
+    those digests automatically.
+  - **The generator validates its own output.** `scripts/` is in no tsconfig include, so
+    `bun run typecheck` never sees it, and `server/utils/ecus.ts` casts the JSON. It therefore
+    asserts every spec yields a non-empty id, name, version and vendor, and every channel a name.
+    Upstream ran a zod schema over these files before serving them; that layer went with the site.
   - **The spec is snake_case (`source_names`).** Until 2026-11 this came from the `oecua.org`
     REST API, which served the same data camelCased (`sourceNames`). Reading YAML with the old
     mapping leaves every channel with an empty source-name list and no error — the generator
     does the conversion, so do not reintroduce a camelCase assumption.
   - History: the site used to fetch `oecua.org/api/adapters` at build with `failInCi: false`, so
-    an outage shipped every ECU page with its channel table silently missing. The OpenECU
-    Alliance was retired on 2026-11-23 and UltraLog owns the corpus.
+    an outage would have shipped every ECU page with its channel table silently missing. The
+    OpenECU Alliance was retired on 2026-11-22 and UltraLog owns the corpus.
 - **Docs are the GitHub wiki**, cloned into `.wiki/` by `scripts/sync-wiki.ts` (the `dev`,
   `generate` and `build` scripts run it first; `WIKI_DIR=../UltraLog.wiki` previews a local
   checkout, including unpushed edits). `nuxt.config.ts` reads the clone for the prerender list,
