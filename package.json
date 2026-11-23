@@ -12,7 +12,8 @@
     "screenshots": "bun scripts/screenshots.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync:wiki": "bun scripts/sync-wiki.ts"
+    "sync:wiki": "bun scripts/sync-wiki.ts",
+    "sync:adapters": "bun scripts/sync-adapters.ts"
   },
   "dependencies": {
     "marked": "^18.1.1",
@@ -28,6 +29,7 @@
     "typescript": "^6",
     "vitest": "^4",
     "vue-tsc": "^3.3.13",
-    "wrangler": "4.152.0"
+    "wrangler": "4.152.0",
+    "yaml": "^2.9.1"
   }
 }

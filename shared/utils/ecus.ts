@@ -1,7 +1,8 @@
 // Supported log formats. Order matches the app's Supported ECUs list on the old site.
 // `wikiSection` is the `## ` heading prefix in the wiki's Supported-ECU-Formats page; the ECU page
-// renders that section at build. `oecua` is the OpenECU Alliance adapter id (vendor/id) when one
-// exists; the channel table comes from it. `sample` is a path under exampleLogs/ in the app repo.
+// renders that section at build. `oecua` is the OpenECU adapter id (`vendor/id`) when one exists;
+// the channel table comes from `data/openecu/adapters.json`, keyed by it. The name is
+// historical: the OpenECU Alliance is retired and UltraLog owns the spec corpus now. `sample` is a path under exampleLogs/ in the app repo.
 
 export interface EcuFormat {
   slug: string
